@@ -297,55 +297,22 @@ function configurarFormularioReserva() {
   });
 }
 
-// Reproduce el recorrido automáticamente al entrar en Inicio.
+// Video de Inicio automático, sin controles y en bucle continuo.
 document.addEventListener("DOMContentLoaded", function () {
   const video = document.querySelector(".hero-tour");
-  const toggle = document.querySelector(".hero-tour-toggle");
-  if (!video || !toggle) return;
-  function isVideoVisible() {
-    const rect = video.getBoundingClientRect();
-    return rect.bottom > 0 && rect.top < window.innerHeight;
-  }
-  let visible = isVideoVisible();
-  let manuallyPaused = false;
+  if (!video) return;
   video.muted = true;
   video.defaultMuted = true;
   video.playsInline = true;
   video.autoplay = true;
-  function updateToggle() {
-    toggle.textContent = video.paused ? "▶" : "Ⅱ";
-    toggle.setAttribute("aria-label", video.paused ? "Reproducir recorrido" : "Pausar recorrido");
-    toggle.setAttribute("aria-pressed", String(video.paused));
+  video.loop = true;
+  video.controls = false;
+  function playVideo() {
+    if (!document.hidden) video.play().catch(function () {});
   }
-  function syncPlayback() {
-    if (visible && !document.hidden && !manuallyPaused) video.play().catch(updateToggle);
-    else video.pause();
-  }
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(function (entries) {
-      visible = entries[0].isIntersecting;
-      syncPlayback();
-    }, { threshold: 0 });
-    observer.observe(video);
-  } else {
-    window.addEventListener("scroll", function () {
-      visible = isVideoVisible();
-      syncPlayback();
-    }, { passive: true });
-  }
-  window.addEventListener("pageshow", function () {
-    visible = isVideoVisible();
-    syncPlayback();
-  });
-  document.addEventListener("visibilitychange", syncPlayback);
-  video.addEventListener("loadeddata", syncPlayback);
-  video.addEventListener("canplay", syncPlayback);
-  video.addEventListener("play", updateToggle);
-  video.addEventListener("pause", updateToggle);
-  toggle.addEventListener("click", function () {
-    manuallyPaused = !video.paused;
-    syncPlayback();
-  });
-  updateToggle();
-  syncPlayback();
+  video.addEventListener("loadeddata", playVideo);
+  video.addEventListener("canplay", playVideo);
+  window.addEventListener("pageshow", playVideo);
+  document.addEventListener("visibilitychange", playVideo);
+  playVideo();
 });
